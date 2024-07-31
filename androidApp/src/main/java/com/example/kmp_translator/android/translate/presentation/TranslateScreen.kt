@@ -1,6 +1,9 @@
 package com.example.kmp_translator.android.translate.presentation
 
 import android.annotation.SuppressLint
+import android.media.AudioManager
+import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -20,11 +23,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import com.example.kmp_translator.android.R
 import com.example.kmp_translator.android.translate.presentation.components.LanguageDropDown
+import com.example.kmp_translator.android.translate.presentation.components.RememberTextToSpeech
 import com.example.kmp_translator.android.translate.presentation.components.SwapLanguagesButton
 import com.example.kmp_translator.android.translate.presentation.components.TranslateTextField
 import com.example.kmp_translator.translate.domain.translate.Translate
 import com.example.kmp_translator.translate.presentation.TranslateEvent
 import com.example.kmp_translator.translate.presentation.TranslateState
+import java.util.Locale
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -87,6 +92,10 @@ fun TranslateScreen(
             item {
                 val clipboardManager = LocalClipboardManager.current
                 val keyboardController = LocalSoftwareKeyboardController.current
+                val tts = RememberTextToSpeech()
+                val params = Bundle()
+                params.putString(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC.toString())
+
                 TranslateTextField(
                     fromText = state.fromText,
                     toText = state.toText,
@@ -115,7 +124,15 @@ fun TranslateScreen(
                     onCloseClick = {
                         onEvent(TranslateEvent.CloseTranslation)
                     },
-                    onSpeakerClick = { /*TODO*/ },
+                    onSpeakerClick = {
+                        tts.language = state.toLanguage.toLocale() ?: Locale.ENGLISH
+                        tts.speak(
+                            state.toText,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            null
+                        )
+                    },
                     onTextFieldClick = {
                         onEvent(TranslateEvent.EditTranslation)
                     },
